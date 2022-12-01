@@ -21,8 +21,12 @@ def send_welcome(message: Message):
     bot.send_message(chat_id, """Приветствуем тебя в Базе знаний МЭИ. Это проект студентов 1 курса.""")
 
 
-logger.warning('Removing webhook.')
-bot.remove_webhook()
-time.sleep(1)
-bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
-logger.success('Webhook is setup.')
+
+if RESET_WEBHOOK:
+	logger.warning('Removing webhook.')
+	bot.remove_webhook()
+	time.sleep(1)
+	bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
+	logger.success('Webhook is setup.')
+else:
+	logger.info('Webhook will not be changed')
