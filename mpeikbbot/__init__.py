@@ -69,6 +69,27 @@ def get_message(message: Message):
 		update_user_status(message.from_user, UserStatus.NEW)
 
 
+def save_content(message:Message):
+	'''
+	Реализация годная, но лучше просто сохранять file_id - это фича API
+	телеграма при которой нам даже не придется скачивать файл к себе.
+	Здесь должна происходить запись file_id и тэгов в базу данных.
+	'''
+	try:
+		chat_id = message.chat.id
+
+		file_info = bot.get_file(message.document.file_id)
+		downloaded_file = bot.download_file(file_info.file_path)
+
+		src = 'C:/Python/Project/tg_bot/files/received/' + message.document.file_name;
+		with open(src, 'wb') as new_file:
+			new_file.write(downloaded_file)
+
+		bot.reply_to(message, "Пожалуй, я сохраню это")
+	except Exception as e:
+		bot.reply_to(message, e)
+
+
 if RESET_WEBHOOK:
 	logger.warning('Removing webhook.')
 	bot.remove_webhook()
