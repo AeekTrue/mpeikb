@@ -4,9 +4,15 @@ import time
 
 from config import TOKEN, ADMIN_ID, WEBHOOK_URL_BASE, WEBHOOK_URL_PATH
 from logger import logger
+from .utils import get_or_set_user_status, update_user_status, UserStatus
 
-
+telebot.apihelper.ENABLE_MIDDLEWARE = True
 bot = telebot.TeleBot(TOKEN)
+
+
+@bot.middleware_handler(update_types=['message'])
+def inject_user_status(bot_instance, message: Message):
+	message.from_user.status = get_or_set_user_status(message.from_user)
 
 
 @bot.message_handler(commands=['help', 'start'])
