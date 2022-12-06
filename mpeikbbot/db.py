@@ -6,7 +6,7 @@ from telebot.types import User
 
 import config
 from logger import logger
-from .types import UserStatus, FileID
+from .types import UserStatus, FileID, Conspectus
 
 conn = psycopg2.connect(dbname=config.DB_NAME, user=config.DB_LOGIN,
 						password=config.DB_PASSWORD, host=config.DB_HOST)
@@ -111,10 +111,19 @@ def create_conspectus(file_id: FileID, file_type: str, tags):
 
 def find_conspectuses(tags):
 	conspectuses = set()
+	top = []
 	for tag in tags:
 		cursor.execute(
-			f"SELECT c.file_id, c.rating, c.file_type from conspect_tag ct left join tag t on t.id = ct.tag_id left join conspect c on c.id = ct.conspect_id WHERE t.name='{tag}'")
+			f"SELECT c.* from conspect_tag ct left join tag t on t.id = ct.tag_id left join conspect c on c.id = ct.conspect_id WHERE t.name='{tag}'")
 		conspectuses.update(cursor.fetchall())
+	for conspectus in conspectuses:
+		cursor.execute(
+			f"SELECT t.name from conspect_tag ct left join tag t on t.id = ct.tag_id WHERE ct.conspect_id={conspectus.id}")
+		conspectus_tags = {tag.name for tag in cursor.fetchall()}
+		common_tags = conspectus_tags.intersection(tags)
+		top.append(Conspectus(id=conspectus.id, file_id=conspectus.file_id, common_tags=len(common_tags),
+							  rating=conspectus.rating, file_type=conspectus.file_type, conspectus_tags=conspectus_tags))
 	logger.debug(f'found {len(conspectuses)}')
+	logger.debug(top)
 	logger.debug(conspectuses)
-	return conspectuses
+	return sorted(top, key=lambda c: c.common_tags, reverse=True)

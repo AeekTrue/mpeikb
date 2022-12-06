@@ -1,4 +1,5 @@
 import enum
+from collections import namedtuple
 
 
 class UserStatus(enum.Enum):
@@ -9,3 +10,5 @@ class UserStatus(enum.Enum):
 
 
 FileID = str
+
+Conspectus = namedtuple('Conspectus', ['id', 'file_id', 'rating', 'common_tags', 'file_type', 'conspectus_tags'])

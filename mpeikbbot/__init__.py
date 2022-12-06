@@ -13,6 +13,24 @@ telebot.apihelper.ENABLE_MIDDLEWARE = True
 bot = telebot.TeleBot(TOKEN)
 
 
+def send_conspectus(chat_id, conspectus):
+	logger.debug(f'sending {conspectus.file_id}')
+	caption = f'{" ".join(conspectus.conspectus_tags)}\nРейтинг конспекта: {conspectus.rating}'
+	if conspectus.file_type == 'photo':
+		bot.send_photo(chat_id, conspectus.file_id,
+					   caption=caption)
+	elif conspectus.file_type == 'document':
+		bot.send_document(chat_id, conspectus.file_id,
+						  caption=caption,
+						  allow_sending_without_reply=True)
+	elif conspectus.file_type == 'video':
+		bot.send_video(chat_id, conspectus.file_id, caption=caption)
+	elif conspectus.file_type == 'audio':
+		bot.send_audio(chat_id, conspectus.file_id, caption=caption)
+	else:
+		logger.error(f'Unknown file type {conspectus.file_type = }')
+		bot.send_message(chat_id, 'Не удалось отправить файл обратитесь к разработчику')
+
 @bot.middleware_handler(update_types=['message'])
 def inject_user_status(bot_instance, message: Message):
 	message.from_user.status = get_or_set_user_status(message.from_user)
@@ -98,22 +116,7 @@ def get_message(message: Message):
 			bot.send_message(message.chat.id, "Вот что мне удалось найти по вашему запросу")
 			count = 0
 			for conspectus in conspectuses:
-				logger.debug(f'sending {conspectus.file_id}')
-				caption = f'Рейтинг конспекта: {conspectus.rating}'
-				if conspectus.file_type == 'photo':
-					bot.send_photo(message.chat.id, conspectus.file_id,
-								   caption=caption)
-				elif conspectus.file_type == 'document':
-					bot.send_document(message.chat.id, conspectus.file_id,
-									  caption=caption,
-									  allow_sending_without_reply=True)
-				elif conspectus.file_type == 'video':
-					bot.send_video(message.chat.id, conspectus.file_id, caption=caption)
-				elif conspectus.file_type == 'audio':
-					bot.send_audio(message.chat.id, conspectus.file_id, caption=caption)
-				else:
-					logger.error(f'Unknown file type {conspectus.file_type = }')
-					bot.send_message(message.chat.id, 'Не удалось отправить файл обратитесь к разработчику')
+				send_conspectus(message.chat.id, conspectus)
 				count += 1
 				if count >= 10:
 					bot.send_message(message.chat.id, "Отправлены первые 10 конспектов")
